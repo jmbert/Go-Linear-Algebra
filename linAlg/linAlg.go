@@ -174,23 +174,17 @@ func (m Matrix) SubMatrix(row, column int) Matrix {
 	return subMatrix
 }
 
-func (m Matrix) Determinant() (float64, error) {
-	if len(m.Columns) > len(m.Columns[0].Fields) {
-		return 0, nil
-	} else if len(m.Columns) < len(m.Columns[0].Fields) {
-		return 0, errors.New("invalid rectangular matrix")
-	} else {
-		var det = 0.0
-		for j := 0; j < len(m.Columns); j++ {
-			var subDet, _ = m.SubMatrix(0, j).Determinant()
-			if j%2 == 0 {
-				det += subDet
-			} else {
-				det -= subDet
-			}
+func (m Matrix) Determinant() float64 {
+	var det = 0.0
+	for j := 0; j < len(m.Columns); j++ {
+		var subDet = m.SubMatrix(0, j).Determinant()
+		if j%2 == 0 {
+			det += subDet
+		} else {
+			det -= subDet
 		}
-		return det, nil
 	}
+	return det
 }
 
 // Figure out eigenstuff nxn formula
@@ -204,6 +198,34 @@ func (m Matrix) Determinant() (float64, error) {
 //		return eigenValues, eigenVectors
 //	}
 //}
+
+func (m Matrix) Transpose() Matrix {
+	var transposed Matrix
+
+	for i := 0; i < len(m.Columns); i++ {
+		transposed.Columns = append(transposed.Columns, m.Row(i))
+	}
+
+	return transposed
+}
+
+func (m Matrix) Cofactor() Matrix {
+	var cofactor Matrix
+
+	for column := 0; column < len(m.Columns); column++ {
+		var c Vector
+		for row := 0; row < len(m.Columns[column].Fields); row++ {
+			c.Fields = append(c.Fields, m.SubMatrix(row, column).Determinant())
+		}
+		cofactor.Columns = append(cofactor.Columns, c)
+	}
+
+	return cofactor
+}
+
+func (m Matrix) Inverse() Matrix {
+	return m.Cofactor().Transpose()
+}
 
 func (m Matrix) Row(row int) Vector {
 	var R Vector
